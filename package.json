@@ -1,0 +1,43 @@
+{
+    "name": "pai3",
+    "version": "1.0.0",
+    "description": "NFT based ecosystem with trading, lending, rewards and vesting subsystems",
+    "scripts": {
+        "build": "forge build",
+        "build-force": "forge build --force",
+        "compile": "hardhat compile",
+        "compile-force": "hardhat compile --force",
+        "deploy": "hardhat run scripts/deploy.js",
+        "deploy-staging": "hardhat run scripts/deploy.js --network staging",
+        "deploy-tokens": "hardhat run scripts/deploy-tokens.js",
+        "deploy-tokens-staging": "hardhat run scripts/deploy-tokens.js --network staging",
+        "format": "prettier --check --write .prettierrc *.json *.js {contracts,test}/**/*.sol scripts/*.js",
+        "format": "prettier --check --write contracts/**/*.sol **/*.js test/*.sol --config .prettierrc",
+        "test": "forge test",
+        "test-force": "forge build --force && forge test",
+        "test-log": "forge test -vv",
+        "test-quick": "forge test --no-compile",
+        "test-verbose": "forge test -vvvv"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/pai3-protocol/pai3"
+    },
+    "author": "PAI3 Team",
+    "license": "MIT",
+    "devDependencies": {
+        "@chainlink/contracts": "1.3.0",
+        "@nomicfoundation/hardhat-foundry": "^1.1.3",
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "@openzeppelin/contracts": "5.2.0",
+        "dotenv": "^16.4.5",
+        "envfile": "^7.1.0",
+        "erc721a": "^4.3.0",
+        "hardhat": "^2.22.17",
+        "prettier": "^3.5.3",
+        "prettier-plugin-package": "^1.4.0",
+        "prettier-plugin-solidity": "^1.4.1",
+        "prettier-plugin-sort-imports": "^1.8.6",
+        "typescript": "^5.8.2"
+    }
+}
