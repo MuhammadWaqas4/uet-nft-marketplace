@@ -8,6 +8,7 @@ module.exports = {
             {
                 version: "0.8.28",
                 settings: {
+                    viaIR:true,
                     optimizer: {
                         enabled: true,
                         runs: 999999
@@ -42,6 +43,7 @@ module.exports = {
     },
     etherscan: {
         apiKey: {
+            holesky: process.env.BLOCK_EXPLORER_API_KEY_STAGING,
             sepolia: process.env.BLOCK_EXPLORER_API_KEY_ETHEREUM,
             bsc: process.env.BLOCK_EXPLORER_API_KEY_BSC
         }

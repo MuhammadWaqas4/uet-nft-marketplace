@@ -13,12 +13,14 @@ async function main() {
     console.log("Chain:", hre.network.name);
 
     // Deployment variables.
-    const ownerAddress = process.env.OWNER_ADDRESS;
-    const rewardWalletAddress = process.env.REWARD_WALLET_ADDRESS;
-    const totalSupply = process.env.TOTAL_SUPPLY;
+    // const ownerAddress = process.env.OWNER_ADDRESS;
+    // const rewardWalletAddress = process.env.REWARD_WALLET_ADDRESS;
+    // const totalSupply = process.env.TOTAL_SUPPLY;
 
     // Deploying token.
-    const pai3Address = await deploy("PAI3", [ownerAddress, rewardWalletAddress, totalSupply]);
+    // const pai3Address = await deploy("PAI3", [ownerAddress, rewardWalletAddress, totalSupply]);
+    const pai3Address = await deploy("ReplaPro", []);
+
 
     // Setting environment variables
     parsedENVFile.PAI3_ADDRESS = pai3Address;
@@ -28,7 +30,9 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 60000));
 
     // Verifying token.
-    await verify(pai3Address, [ownerAddress, rewardWalletAddress, totalSupply]);
+    // await verify(pai3Address, [ownerAddress, rewardWalletAddress, totalSupply]);
+    await verify(pai3Address, []);
+
 
     // Exiting.
     process.exit();

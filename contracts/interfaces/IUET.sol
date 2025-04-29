@@ -13,4 +13,5 @@ interface IUET is IERC721 {
         string memory uri,
         uint256 mintIndex
     ) external payable returns (uint256);
+
 }

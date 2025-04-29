@@ -24,7 +24,6 @@ import { IUET } from "./interfaces/IUET.sol";
  * @notice UET Marketplace.
  */
 contract Marketplace is Ownable {
-
     using SafeERC20 for IERC20;
     using Address for address payable;
     using Strings for string;
@@ -38,19 +37,19 @@ contract Marketplace is Ownable {
 
     IERC20 constant _ETH = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
-    struct TradeDetails{
+    struct TradeDetails {
         address _seller; // remove
         address _bidder;
         uint256 _amount;
         uint256 tokenId;
     }
 
-    struct Signature{
-         uint8 v;
-         bytes32 r;
-         bytes32 s;
+    struct Signature {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
     }
-    
+
     enum BidType {
         OFFER,
         BID
@@ -58,14 +57,16 @@ contract Marketplace is Ownable {
 
     /* ========================== EVENTS ========================== */
 
-    event OfferAndTransfer(address _owner,
+    event OfferAndTransfer(
+        address _owner,
         address _bidder,
         uint256 _amount,
         uint256 tokenId,
         IUET contractAddress
     );
 
-    event AcceptBidAndTransfer(address  _seller,
+    event AcceptBidAndTransfer(
+        address _seller,
         address _bidder,
         uint256 _amount,
         uint256 tokenId,
@@ -73,7 +74,8 @@ contract Marketplace is Ownable {
         IUET contractAddress
     );
 
-    event BuyAndTransfer(address _seller,
+    event BuyAndTransfer(
+        address _seller,
         address _buyer,
         uint256 _amount,
         uint256 tokenId,
@@ -82,7 +84,10 @@ contract Marketplace is Ownable {
 
     event WithdrawStoredInAccount(address recipient, uint256 amount);
 
-    event FeeWalletUpdated(address indexed oldWallet, address indexed newWallet);
+    event FeeWalletUpdated(
+        address indexed oldWallet,
+        address indexed newWallet
+    );
 
     event PlatformFeeUpdated(uint256 oldFee, uint256 newFee);
 
@@ -92,13 +97,13 @@ contract Marketplace is Ownable {
         platformFee = 0;
         platformFeeRecipient = _platformFeeRecipient;
     }
-    
+
     /* ========================== FUNCTIONS ========================== */
 
     // allowance check
     // balanceOf check
     // v, r, s
-    
+
     function offerAndTransfer(
         TradeDetails memory values,
         bytes memory signSeller,
@@ -106,16 +111,19 @@ contract Marketplace is Ownable {
         IUET contractAddress,
         address royaltyWallet,
         uint256 royalty,
-         uint256 deadline,
+        uint256 deadline,
         IERC20 tokenAddress,
         BidType bid
     ) public returns (uint256) {
-        if(bid == BidType.BID){
+        if (bid == BidType.BID) {
             if (deadline < block.timestamp) {
                 revert();
             }
         }
-        if (tokenAddress.allowance(values._bidder, address(this)) < values._amount) {
+        if (
+            tokenAddress.allowance(values._bidder, address(this)) <
+            values._amount
+        ) {
             revert();
         }
         if (tokenAddress.balanceOf(values._bidder) < values._amount) {
@@ -123,7 +131,7 @@ contract Marketplace is Ownable {
         }
 
         IUET Nft = IUET(contractAddress);
-        
+
         if (Nft.ownerOf(values.tokenId) != values._seller) {
             revert();
         }
@@ -169,17 +177,23 @@ contract Marketplace is Ownable {
         IERC20 tokenAddress
     ) public payable returns (uint256) {
         IUET Nft = IUET(contractAddress);
-        
+
         if (Nft.ownerOf(values.tokenId) != values._seller) {
             revert();
         }
         if (!(Nft.isApprovedForAll(values._seller, address(this)))) {
             revert();
         }
-        
+
         // offer time will be like when the seller put on sale
         bytes32 hashSeller = keccak256(
-            abi.encodePacked(this, values._seller, values._amount, offerTime, values.tokenId)
+            abi.encodePacked(
+                this,
+                values._seller,
+                values._amount,
+                offerTime,
+                values.tokenId
+            )
         ).toEthSignedMessageHash();
 
         if (values._seller != hashSeller.recover(signSeller)) {
@@ -187,16 +201,27 @@ contract Marketplace is Ownable {
         }
 
         bytes32 hashBuyer = keccak256(
-            abi.encodePacked(this, _msgSender(), values._amount, offerTime, values.tokenId)
+            abi.encodePacked(
+                this,
+                _msgSender(),
+                values._amount,
+                offerTime,
+                values.tokenId
+            )
         ).toEthSignedMessageHash();
 
         if (_msgSender() != hashBuyer.recover(signBuyer)) {
             revert();
         }
 
-        if (tokenAddress ==  _ETH) {
+        if (tokenAddress == _ETH) {
             if (msg.value == values._amount) {
-                _processEthPayments(values._seller, royaltyWallet, royalty, values._amount);
+                _processEthPayments(
+                    values._seller,
+                    royaltyWallet,
+                    royalty,
+                    values._amount
+                );
             } else {
                 revert();
             }
@@ -204,7 +229,7 @@ contract Marketplace is Ownable {
             _processTokenPayments(
                 _msgSender(),
                 values._seller,
-                 royaltyWallet,
+                royaltyWallet,
                 royalty,
                 values._amount,
                 tokenAddress
@@ -212,7 +237,13 @@ contract Marketplace is Ownable {
         }
 
         Nft.safeTransferFrom(values._seller, values._bidder, values.tokenId);
-        emit BuyAndTransfer(values._seller, values._bidder, values._amount, values.tokenId, contractAddress);
+        emit BuyAndTransfer(
+            values._seller,
+            values._bidder,
+            values._amount,
+            values.tokenId,
+            contractAddress
+        );
 
         return values.tokenId;
     }
@@ -226,14 +257,27 @@ contract Marketplace is Ownable {
         bytes memory signBuyer,
         uint256 tokenId,
         IERC20 tokenAddress
-    ) public view returns (bool){
-
+    ) public view returns (bool) {
         bytes32 hashSeller = keccak256(
-            abi.encodePacked(this, seller, deadline, amount, tokenId, tokenAddress)
+            abi.encodePacked(
+                this,
+                seller,
+                deadline,
+                amount,
+                tokenId,
+                tokenAddress
+            )
         ).toEthSignedMessageHash();
 
         bytes32 hashBuyer = keccak256(
-            abi.encodePacked(this,  buyer, deadline, amount, tokenId, tokenAddress)
+            abi.encodePacked(
+                this,
+                buyer,
+                deadline,
+                amount,
+                tokenId,
+                tokenAddress
+            )
         ).toEthSignedMessageHash();
 
         if (seller != hashSeller.recover(signSeller)) {
@@ -246,7 +290,7 @@ contract Marketplace is Ownable {
         return true;
     }
 
-    function withdrawStoredInAccount() public onlyOwner{
+    function withdrawStoredInAccount() public onlyOwner {
         uint256 amount = address(this).balance;
         if (amount > 0) {
             payable(msg.sender).sendValue(amount);
@@ -254,16 +298,16 @@ contract Marketplace is Ownable {
         emit WithdrawStoredInAccount(msg.sender, amount);
     }
 
-    function setfeeWallet(address newAddress) public onlyOwner{
-        if (newAddress == address(0)){
+    function setfeeWallet(address newAddress) public onlyOwner {
+        if (newAddress == address(0)) {
             revert();
         }
 
         emit FeeWalletUpdated(platformFeeRecipient, newAddress);
         platformFeeRecipient = newAddress;
     }
-    
-    function setPlatformfee(uint256 amount) public onlyOwner{
+
+    function setPlatformfee(uint256 amount) public onlyOwner {
         if (amount > 5) {
             payable(msg.sender).sendValue(amount);
         }
@@ -276,8 +320,8 @@ contract Marketplace is Ownable {
         address _seller,
         uint256 amount,
         IERC20 tokenAddress
-    ) internal{
-        uint256 _fee = platformFee * amount / 100;
+    ) internal {
+        uint256 _fee = (platformFee * amount) / 100;
         tokenAddress.safeTransferFrom(_bidder, platformFeeRecipient, _fee);
         tokenAddress.safeTransferFrom(_bidder, _seller, amount - _fee);
     }
@@ -289,17 +333,21 @@ contract Marketplace is Ownable {
         uint256 royaltyFee,
         uint256 amount,
         IERC20 tokenAddress
-    )  internal{
+    ) internal {
         if (royaltyFee > 10) {
             payable(msg.sender).sendValue(amount);
         }
 
-        uint256 royalty = royaltyFee * amount / 100;
+        uint256 royalty = (royaltyFee * amount) / 100;
         uint256 _fee = platformFee * amount - royalty / 100;
-        
+
         tokenAddress.safeTransferFrom(_bidder, platformFeeRecipient, _fee);
         tokenAddress.safeTransferFrom(_bidder, royaltyWallet, royalty);
-        tokenAddress.safeTransferFrom(_bidder, _seller, amount - _fee - royalty);
+        tokenAddress.safeTransferFrom(
+            _bidder,
+            _seller,
+            amount - _fee - royalty
+        );
     }
 
     function _processEthPayments(
@@ -307,11 +355,11 @@ contract Marketplace is Ownable {
         address royaltyWallet,
         uint256 royaltyFee,
         uint256 amount
-    ) internal{
+    ) internal {
         if (royaltyFee > 10) {
             payable(msg.sender).sendValue(amount);
         }
-        uint256 royalty = royaltyFee * amount / 100;
+        uint256 royalty = (royaltyFee * amount) / 100;
         uint256 _fee = platformFee * amount - royalty / 100;
 
         payable(royaltyWallet).transfer(royalty);
@@ -319,8 +367,11 @@ contract Marketplace is Ownable {
         payable(_seller).transfer(amount - _fee - royalty);
     }
 
-    function _processEthPaymentsWithoutRoyalty(address _seller, uint256 amount) internal{
-        uint256 _fee = platformFee * amount / 100;
+    function _processEthPaymentsWithoutRoyalty(
+        address _seller,
+        uint256 amount
+    ) internal {
+        uint256 _fee = (platformFee * amount) / 100;
         payable(platformFeeRecipient).transfer(_fee);
         payable(_seller).transfer(amount - _fee);
     }
