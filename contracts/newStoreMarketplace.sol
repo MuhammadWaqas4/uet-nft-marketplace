@@ -17,6 +17,7 @@ import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/Mes
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 // import { IUET } from "@openzeppelin/contracts/token/ERC721/IUET.sol";
 import { IUET } from "./interfaces/IUET.sol";
+import { IUET1155 } from "./interfaces/IUET1155.sol";
 
 /**
  * @title UET.
@@ -40,7 +41,8 @@ contract UETMarketplace is Ownable {
     struct TradeDetails {
         address _seller; // remove
         address _bidder;
-        uint256 _amount;
+        uint256 _price;
+        uint256 _amount; // nft amount in case of
         uint256 tokenId;
     }
 
@@ -60,52 +62,52 @@ contract UETMarketplace is Ownable {
     event OfferAndMint(
         address _owner,
         address _bidder,
-        uint256 _amount,
+        uint256 _price,
         string uri,
         uint256 mintIndex,
-        IUET contractAddress
+        address contractAddress
     );
 
     event AcceptBidAndMint(
         address _seller,
         address _bidder,
-        uint256 _amount,
+        uint256 _price,
         uint256 mintIndex,
-        IUET contractAddress
+        address contractAddress
     );
 
     event BuyAndMint(
         address _seller,
         address _buyer,
-        uint256 _amount,
+        uint256 _price,
         string uri,
         uint256 mintIndex,
-        IUET contractAddress
+        address contractAddress
     );
 
     event OfferAndTransfer(
         address _owner,
         address _bidder,
-        uint256 _amount,
+        uint256 _price,
         uint256 tokenId,
-        IUET contractAddress
+        address contractAddress
     );
 
     event AcceptBidAndTransfer(
         address _seller,
         address _bidder,
-        uint256 _amount,
+        uint256 _price,
         uint256 tokenId,
         uint256 deadline,
-        IUET contractAddress
+        address contractAddress
     );
 
     event BuyAndTransfer(
         address _seller,
         address _buyer,
-        uint256 _amount,
+        uint256 _price,
         uint256 tokenId,
-        IUET contractAddress
+        address contractAddress
     );
 
     event WithdrawStoredInAccount(address recipient, uint256 amount);
@@ -135,9 +137,8 @@ contract UETMarketplace is Ownable {
         string memory uri,
         bytes memory signSeller,
         bytes memory signBuyer,
-        IUET contractAddress,
+        address contractAddress,
         uint256 deadline,
-        bytes memory txhash,
         IERC20 tokenAddress,
         BidType bid
     ) public returns (uint256) {
@@ -147,28 +148,25 @@ contract UETMarketplace is Ownable {
             }
         }
 
-        // require(tokenAddress.allowance(values._bidder, address(this)) >= values._amount, "allowance not provided");
+        // require(tokenAddress.allowance(values._bidder, address(this)) >= values._price, "allowance not provided");
         if (
             tokenAddress.allowance(values._bidder, address(this)) <
-            values._amount
+            values._price
         ) {
             revert();
         }
-        // require(tokenAddress.balanceOf(values._bidder) >= values._amount, "not enought balaance");
-        if (tokenAddress.balanceOf(values._bidder) < values._amount) {
+        // require(tokenAddress.balanceOf(values._bidder) >= values._price, "not enought balaance");
+        if (tokenAddress.balanceOf(values._bidder) < values._price) {
             revert();
         }
-
-        IUET Nft = IUET(contractAddress);
 
         signVerification(
             _msgSender(),
             values._bidder,
             deadline,
-            values._amount,
+            values._price,
             signSeller,
             signBuyer,
-            txhash,
             values.tokenId,
             tokenAddress
         );
@@ -176,15 +174,22 @@ contract UETMarketplace is Ownable {
         _processTokenPaymentsWithoutRotalty(
             values._bidder,
             _msgSender(),
-            values._amount,
+            values._price,
             tokenAddress
         );
+        
+        if(values._amount > 1){
+            IUET1155 Nft = IUET1155(contractAddress);
+            Nft.mintPro(values._bidder, values.tokenId, values._amount, "");
+        } else {
+            IUET Nft = IUET(contractAddress);
+            Nft.mintPro(values._bidder, uri, values.tokenId);
+        }
 
-        Nft.mintPro(values._bidder, uri, values.tokenId);
         emit AcceptBidAndMint(
             _msgSender(),
             values._bidder,
-            values._amount,
+            values._price,
             values.tokenId,
             contractAddress
         );
@@ -196,11 +201,10 @@ contract UETMarketplace is Ownable {
         TradeDetails memory values,
         bytes memory signSeller,
         bytes memory signBuyer,
-        IUET contractAddress,
+        address contractAddress,
         address royaltyWallet,
         uint256 royalty,
         uint256 deadline,
-        bytes memory txhash,
         IERC20 tokenAddress,
         BidType bid
     ) public returns (uint256) {
@@ -209,26 +213,15 @@ contract UETMarketplace is Ownable {
                 revert();
             }
         }
-        // require(tokenAddress.allowance(values._bidder, address(this)) >= values._amount, "Allowance not given");
+        // require(tokenAddress.allowance(values._bidder, address(this)) >= values._price, "Allowance not given");
         if (
             tokenAddress.allowance(values._bidder, address(this)) <
-            values._amount
+            values._price
         ) {
             revert();
         }
-        // require(tokenAddress.balanceOf(values._bidder) >= values._amount, "not enought balance");
-        if (tokenAddress.balanceOf(values._bidder) < values._amount) {
-            revert();
-        }
-
-        IUET Nft = IUET(contractAddress);
-
-        // require(Nft.ownerOf(values.tokenId) == values._seller, "Invalid owner: Seller does not own the specified token");
-        if (Nft.ownerOf(values.tokenId) != values._seller) {
-            revert();
-        }
-        // require(Nft.isApprovedForAll(values._seller, address(this)), "Approval missing: Seller must approve contract to transfer NFT");
-        if (!(Nft.isApprovedForAll(values._seller, address(this)))) {
+        // require(tokenAddress.balanceOf(values._bidder) >= values._price, "not enought balance");
+        if (tokenAddress.balanceOf(values._bidder) < values._price) {
             revert();
         }
 
@@ -237,10 +230,9 @@ contract UETMarketplace is Ownable {
             _msgSender(),
             values._bidder,
             deadline,
-            values._amount,
+            values._price,
             signSeller,
             signBuyer,
-            txhash,
             values.tokenId,
             tokenAddress
         );
@@ -250,13 +242,29 @@ contract UETMarketplace is Ownable {
             _msgSender(),
             royaltyWallet,
             royalty,
-            values._amount,
+            values._price,
             tokenAddress
         );
 
-        Nft.safeTransferFrom(values._seller, values._bidder, values.tokenId);
-        // emit OfferAndTransfer(values._seller, values._bidder, values._amount,values.tokenId, contractAddress);
-        // emit AcceptBidAndTransfer(values._seller, values._bidder, values._amount,values.tokenId, deadline, contractAddress);
+        if(values._amount > 1){
+            IUET1155 Nft = IUET1155(contractAddress);
+            Nft.safeTransferFrom(values._seller, values._bidder, values.tokenId, values._amount, "values");
+        } else {
+            IUET Nft = IUET(contractAddress);
+
+            if (Nft.ownerOf(values.tokenId) != values._seller) {
+                revert();
+            }
+            
+            if (!(Nft.isApprovedForAll(values._seller, address(this)))) {
+                revert();
+            }
+
+            Nft.safeTransferFrom(values._seller, values._bidder, values.tokenId);
+        }
+
+        emit OfferAndTransfer(values._seller, values._bidder, values._price, values.tokenId, contractAddress);
+        // emit AcceptBidAndTransfer(values._seller, values._bidder, values._price,values.tokenId, deadline, contractAddress);
 
         return values.tokenId;
     }
@@ -266,15 +274,15 @@ contract UETMarketplace is Ownable {
         string memory uri,
         bytes memory signSeller,
         bytes memory signBuyer,
-        IUET contractAddress,
+        address contractAddress,
         uint256 offerTime,
         IERC20 tokenAddress
     ) public payable returns (uint256) {
-        IUET Nft = IUET(contractAddress);
+        // IUET Nft = IUET(contractAddress);
 
         // offer time is when the seller put on sale
         bytes32 hashSeller = keccak256(
-            abi.encodePacked(this, values._seller, values._amount, offerTime)
+            abi.encodePacked(this, values._seller, values._price, offerTime)
         ).toEthSignedMessageHash();
 
         if (values._seller != hashSeller.recover(signSeller)) {
@@ -282,7 +290,7 @@ contract UETMarketplace is Ownable {
         }
 
         bytes32 hashBuyer = keccak256(
-            abi.encodePacked(this, _msgSender(), values._amount, offerTime)
+            abi.encodePacked(this, _msgSender(), values._price, offerTime)
         ).toEthSignedMessageHash();
 
         if (_msgSender() != hashBuyer.recover(signBuyer)) {
@@ -290,11 +298,11 @@ contract UETMarketplace is Ownable {
         }
 
         if (tokenAddress == _ETH) {
-            // require(msg.value == values._amount, "Incorrect ETH amount: Sent value does not match required price");
-            if (msg.value == values._amount) {
+            // require(msg.value == values._price, "Incorrect ETH amount: Sent value does not match required price");
+            if (msg.value == values._price) {
                 _processEthPaymentsWithoutRoyalty(
                     values._seller,
-                    values._amount
+                    values._price
                 );
             } else {
                 revert();
@@ -303,16 +311,23 @@ contract UETMarketplace is Ownable {
             _processTokenPaymentsWithoutRotalty(
                 _msgSender(),
                 values._seller,
-                values._amount,
+                values._price,
                 tokenAddress
             );
         }
 
-        Nft.mintPro(values._bidder, uri, values.tokenId);
+        if(values._amount > 1){
+            IUET1155 Nft = IUET1155(contractAddress);
+            Nft.mintPro(values._bidder, values.tokenId, values._amount, "");
+        } else {
+            IUET Nft = IUET(contractAddress);
+            Nft.mintPro(values._bidder, uri, values.tokenId);
+        }
+
         emit BuyAndMint(
             values._seller,
             values._bidder,
-            values._amount,
+            values._price,
             uri,
             values.tokenId,
             contractAddress
@@ -325,29 +340,29 @@ contract UETMarketplace is Ownable {
         TradeDetails memory values,
         bytes memory signSeller,
         bytes memory signBuyer,
-        IUET contractAddress,
+        address contractAddress,
         address royaltyWallet,
         uint256 royalty,
         uint256 offerTime,
         IERC20 tokenAddress
     ) public payable returns (uint256) {
-        IUET Nft = IUET(contractAddress);
+        // IUET Nft = IUET(contractAddress);
 
         // require(Nft.ownerOf(values.tokenId) == values._seller, "seller is not the owner");
-        if (Nft.ownerOf(values.tokenId) != values._seller) {
-            revert();
-        }
-        // require(Nft.isApprovedForAll(values._seller, address(this)), "Allowance is not provided");
-        if (!(Nft.isApprovedForAll(values._seller, address(this)))) {
-            revert();
-        }
+        // if (Nft.ownerOf(values.tokenId) != values._seller) {
+        //     revert();
+        // }
+        // // require(Nft.isApprovedForAll(values._seller, address(this)), "Allowance is not provided");
+        // if (!(Nft.isApprovedForAll(values._seller, address(this)))) {
+        //     revert();
+        // }
 
         // offer time will be like when the seller put on sale
         bytes32 hashSeller = keccak256(
             abi.encodePacked(
                 this,
                 values._seller,
-                values._amount,
+                values._price,
                 offerTime,
                 values.tokenId
             )
@@ -361,7 +376,7 @@ contract UETMarketplace is Ownable {
             abi.encodePacked(
                 this,
                 _msgSender(),
-                values._amount,
+                values._price,
                 offerTime,
                 values.tokenId
             )
@@ -372,13 +387,13 @@ contract UETMarketplace is Ownable {
         }
 
         if (tokenAddress == _ETH) {
-            // require(msg.value == values._amount, "Value sent is not Correct");
-            if (msg.value == values._amount) {
+            // require(msg.value == values._price, "Value sent is not Correct");
+            if (msg.value == values._price) {
                 _processEthPayments(
                     values._seller,
                     royaltyWallet,
                     royalty,
-                    values._amount
+                    values._price
                 );
             } else {
                 revert();
@@ -389,16 +404,33 @@ contract UETMarketplace is Ownable {
                 values._seller,
                 royaltyWallet,
                 royalty,
-                values._amount,
+                values._price,
                 tokenAddress
             );
         }
 
-        Nft.safeTransferFrom(values._seller, values._bidder, values.tokenId);
+        // Nft.safeTransferFrom(values._seller, values._bidder, values.tokenId);
+        if(values._amount > 1){
+            IUET1155 Nft = IUET1155(contractAddress);
+            Nft.safeTransferFrom(values._seller, values._bidder, values.tokenId, values._amount, "values");
+        } else {
+            IUET Nft = IUET(contractAddress);
+
+            if (Nft.ownerOf(values.tokenId) != values._seller) {
+                revert();
+            }
+            
+            if (!(Nft.isApprovedForAll(values._seller, address(this)))) {
+                revert();
+            }
+
+            Nft.safeTransferFrom(values._seller, values._bidder, values.tokenId);
+        }
+
         emit BuyAndTransfer(
             values._seller,
             values._bidder,
-            values._amount,
+            values._price,
             values.tokenId,
             contractAddress
         );
@@ -413,7 +445,7 @@ contract UETMarketplace is Ownable {
         uint256 amount,
         bytes memory signSeller,
         bytes memory signBuyer,
-        bytes memory txhash,
+        // bytes memory txhash,
         uint256 tokenId,
         IERC20 tokenAddress
     ) public view returns (bool) {
@@ -429,14 +461,14 @@ contract UETMarketplace is Ownable {
         ).toEthSignedMessageHash();
 
 
-        bytes32 hashBuyeeer = keccak256(
-            abi.encodePacked(
-                address(this),
-                txhash,
-                amount,
-                tokenAddress
-            )
-        ).toEthSignedMessageHash();
+        // bytes32 hashBuyeeer = keccak256(
+        //     abi.encodePacked(
+        //         address(this),
+        //         txhash,
+        //         amount,
+        //         tokenAddress
+        //     )
+        // ).toEthSignedMessageHash();
 
 
         bytes32 hashBuyer = keccak256(
