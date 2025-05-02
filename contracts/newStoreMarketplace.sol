@@ -35,7 +35,9 @@ contract UETMarketplace is Ownable {
 
     uint256 public platformFee;
     address public platformFeeRecipient;
-
+    address public adminAddress;
+    IUET1155 public  RecieptNft = IUET1155(0x82389495Bb548E00e901F8AC82E9761152898834);
+    address public UETPool = 0x82389495Bb548E00e901F8AC82E9761152898834; // must be NFT receiveable
     IERC20 constant _ETH = IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
 
     struct TradeDetails {
@@ -58,6 +60,13 @@ contract UETMarketplace is Ownable {
     }
 
     /* ========================== EVENTS ========================== */
+
+    event ItemPurchased(
+        uint256 _itemId,
+        uint256 _amount,
+        address _bidder,
+        uint256 _price
+    );
 
     event OfferAndMint(
         address _owner,
@@ -131,6 +140,50 @@ contract UETMarketplace is Ownable {
     // allowance check
     // balanceOf check
     // v, r, s
+
+    function buyPhysicalItem(uint256 itemId, uint256 amount, uint256 price, bytes memory sign, bool nft, IERC20 tokenAddress, address seller) external payable {
+        bytes32 hashBuyer = keccak256(
+            abi.encodePacked(
+                this,
+                itemId,
+                price,
+                amount,
+                _msgSender()
+            )
+        ).toEthSignedMessageHash();
+
+        if (adminAddress != hashBuyer.recover(sign)) {
+            revert();
+        }
+
+        if (tokenAddress == _ETH) {
+            // require(msg.value == values._price, "Incorrect ETH amount: Sent value does not match required price");
+            if (msg.value == price) {
+                _processEthPaymentsWithoutRoyalty(
+                    seller,
+                    price
+                );
+            } else {
+                revert();
+            }
+        } else {
+            _processTokenPaymentsWithoutRotalty(
+                _msgSender(),
+                seller,
+                price,
+                tokenAddress
+            );
+        }
+        // mint function
+        if(nft){
+            // RecieptNft.mintPro(_msgSender(), itemId, amount, "");  // for now 721, account, id, points at the time of listing
+            RecieptNft.mintPro(_msgSender(), itemId, amount, ""); 
+        } else {
+            RecieptNft.mintPro(UETPool, itemId, amount, "");
+        }
+
+        emit ItemPurchased(itemId, amount, _msgSender(), price);
+    }
 
     function offerAndMint(
         TradeDetails memory values,
