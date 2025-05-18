@@ -25,7 +25,7 @@ module.exports = {
             }
         },
         staging: {
-            url: process.env.URL_STAGING ? process.env.URL_STAGING : "https://place.holder",
+            url: process.env.URL_STAGING_HOLESKY ? process.env.URL_STAGING_HOLESKY : "https://place.holder",
             accounts: [
                 process.env.PRIVATE_KEY_MAINNET
                     ? process.env.PRIVATE_KEY_MAINNET

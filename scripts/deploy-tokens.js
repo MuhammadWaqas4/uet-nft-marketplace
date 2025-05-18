@@ -19,20 +19,19 @@ async function main() {
     // const totalSupply = process.env.TOTAL_SUPPLY;
 
     // Deploying token.
-    // const pai3Address = await deploy("PAI3", [ownerAddress, rewardWalletAddress, totalSupply]);
-    const pai3Address = await deploy("Luckify", [usdt, ownerAddress]);
+    const deployedAddress = await deploy("USDT", []);
 
     // Setting environment variables
-    // parsedENVFile.PAI3_ADDRESS = pai3Address;
+    // parsedENVFile.deployedAddress = deployedAddress;
     // fs.writeFileSync(".env", envfile.stringify(parsedENVFile));
-    console.log("pai3Address", pai3Address);
+    console.log("deployedAddress", deployedAddress);
 
     // Waiting for block explorer.
     await new Promise((resolve) => setTimeout(resolve, 60000));
 
     // Verifying token.
-    // await verify(pai3Address, [ownerAddress, rewardWalletAddress, totalSupply]);
-    await verify(pai3Address, [usdt, ownerAddress]);
+    // await verify(deployedAddress, [ownerAddress, rewardWalletAddress, totalSupply]);
+    await verify(deployedAddress, []);
 
 
     // Exiting.

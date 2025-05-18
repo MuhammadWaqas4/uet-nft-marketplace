@@ -12,7 +12,7 @@ import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 contract ReplaProNFT is ERC721{
     uint256 private _totalSupply;
 
-    constructor() ERC721("NFT Pro", "Pro") {
+    constructor() ERC721("Repla NFT Pro", "Repla") {
     }
 
     function totalSupply() public view returns (uint256) {

@@ -16,4 +16,11 @@ interface IUET1155 is IERC1155 {
         bytes memory data
     ) external payable returns (uint256);
 
+    // custom minting functionality with id and uri.
+    function mint(
+        address recipient,
+        uint256 mintIndex,
+        uint256 value
+    ) external payable returns (uint256);
+
 }
