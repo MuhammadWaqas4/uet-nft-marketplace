@@ -16,14 +16,17 @@ async function main() {
     const ownerAddress = process.env.OWNER_ADDRESS;
 
     // Deploying token.
-    // const marketplace3Address = await deploy("UETMarketplace", [ownerAddress]);
-    const marketplace3Address = "0x59f78fB97FB36adbaDCbB43Fa9031797faAad54A";
+    const marketplace3Address = await deploy("SimpleMarketplace", [ownerAddress]);
+    
+    // const marketplace3Address = "0x01a93b7153Ee160F3176af0B0F31121DF9f0FFA5";
     // Setting environment variables
     // parsedENVFile.PAI3_ADDRESS = marketplace3Address;
     // fs.writeFileSync(".env", envfile.stringify(parsedENVFile));
 
+    console.log("marketplace3Address", marketplace3Address);
+
     // // Waiting for block explorer.
-    // await new Promise((resolve) => setTimeout(resolve, 60000));
+    await new Promise((resolve) => setTimeout(resolve, 60000));
 
     // Verifying token.
     await verify(marketplace3Address, [ownerAddress]);

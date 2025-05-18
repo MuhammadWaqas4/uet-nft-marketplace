@@ -27,8 +27,8 @@ module.exports = {
         staging: {
             url: process.env.URL_STAGING ? process.env.URL_STAGING : "https://place.holder",
             accounts: [
-                process.env.PRIVATE_KEY_STAGING
-                    ? process.env.PRIVATE_KEY_STAGING
+                process.env.PRIVATE_KEY_MAINNET
+                    ? process.env.PRIVATE_KEY_MAINNET
                     : "0x0000000000000000000000000000000000000000000000000000000000000000"
             ]
         },

@@ -5,14 +5,14 @@ pragma solidity 0.8.28;
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /**
- * @title NFT Pro.
+ * @title Repla Pro NFT, Sample.
  * @author Waqas.
  * @notice Repla Pro NFT.
  */
-contract ReplaPro is ERC721{
+contract ReplaProNFT is ERC721{
     uint256 private _totalSupply;
 
-    constructor() ERC721("Pro", "Pro") {
+    constructor() ERC721("NFT Pro", "Pro") {
     }
 
     function totalSupply() public view returns (uint256) {

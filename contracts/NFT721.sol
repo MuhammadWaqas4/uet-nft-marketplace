@@ -18,7 +18,7 @@ import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 
 /**
- * @title UET.
+ * @title UET Sample NFT.
  * @author UET Team.
  * @notice UET Marketplace.
  */

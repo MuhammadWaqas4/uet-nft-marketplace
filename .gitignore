@@ -31,3 +31,14 @@ yarn.lock
 # Documentation files
 docs
 misc.txt
+
+LuckifyLP.sol
+NFT721.sol
+NFT1155.sol
+oldMarketplace.sol
+simpleMarketplace.sol
+uetMarketplace.sol
+
+
+
+

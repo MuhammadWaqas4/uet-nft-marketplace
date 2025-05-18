@@ -13,25 +13,26 @@ async function main() {
     console.log("Chain:", hre.network.name);
 
     // Deployment variables.
-    // const ownerAddress = process.env.OWNER_ADDRESS;
+    const ownerAddress = "0x82389495Bb548E00e901F8AC82E9761152898834";
+    const usdt = "0xc67ab320Df41D8589Cae74B69F45eb2EC09104fC";
     // const rewardWalletAddress = process.env.REWARD_WALLET_ADDRESS;
     // const totalSupply = process.env.TOTAL_SUPPLY;
 
     // Deploying token.
     // const pai3Address = await deploy("PAI3", [ownerAddress, rewardWalletAddress, totalSupply]);
-    const pai3Address = await deploy("ReplaPro", []);
-
+    const pai3Address = await deploy("Luckify", [usdt, ownerAddress]);
 
     // Setting environment variables
-    parsedENVFile.PAI3_ADDRESS = pai3Address;
-    fs.writeFileSync(".env", envfile.stringify(parsedENVFile));
+    // parsedENVFile.PAI3_ADDRESS = pai3Address;
+    // fs.writeFileSync(".env", envfile.stringify(parsedENVFile));
+    console.log("pai3Address", pai3Address);
 
     // Waiting for block explorer.
     await new Promise((resolve) => setTimeout(resolve, 60000));
 
     // Verifying token.
     // await verify(pai3Address, [ownerAddress, rewardWalletAddress, totalSupply]);
-    await verify(pai3Address, []);
+    await verify(pai3Address, [usdt, ownerAddress]);
 
 
     // Exiting.

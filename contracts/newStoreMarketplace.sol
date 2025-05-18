@@ -22,7 +22,7 @@ import { IUET1155 } from "./interfaces/IUET1155.sol";
 /**
  * @title UET.
  * @author UET Team.
- * @notice UET Marketplace.
+ * @notice UET Store Marketplace.
  */
 contract UETMarketplace is Ownable {
     using SafeERC20 for IERC20;
@@ -46,12 +46,6 @@ contract UETMarketplace is Ownable {
         uint256 _price;
         uint256 _amount; // nft amount in case of
         uint256 tokenId;
-    }
-
-    struct Signature {
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
     }
 
     enum BidType {
@@ -127,6 +121,26 @@ contract UETMarketplace is Ownable {
     );
 
     event PlatformFeeUpdated(uint256 oldFee, uint256 newFee);
+
+    /* ========================== ERRORS ========================== */
+
+    error DeadlinePassed();
+
+    error InsufficientAllownce();
+
+    error InsufficientBalance();
+
+    error InvalidOwner();
+
+    error NftNotApproved();
+
+    error  IncorrectSellerSignature();
+
+    error IncorrectBuyerSignature();
+
+    error InsufficientAmount();
+
+    error ERC20InvalidReceiver();
 
     /* ========================== CONSTRUCTOR ========================== */
 
