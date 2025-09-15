@@ -1,5 +1,6 @@
 require("@nomicfoundation/hardhat-foundry");
 require("@nomicfoundation/hardhat-toolbox");
+require("@openzeppelin/hardhat-upgrades");
 require("dotenv").config();
 
 module.exports = {
@@ -25,18 +26,18 @@ module.exports = {
             }
         },
         staging: {
-            url: process.env.URL_STAGING_HOLESKY ? process.env.URL_STAGING_HOLESKY : "https://place.holder",
+            url: process.env.URL_STAGING ? process.env.URL_STAGING : "https://place.holder",
             accounts: [
-                process.env.PRIVATE_KEY_MAINNET
-                    ? process.env.PRIVATE_KEY_MAINNET
+                process.env.PRIVATE_KEY_MAINNET3
+                    ? process.env.PRIVATE_KEY_MAINNET3
                     : "0x0000000000000000000000000000000000000000000000000000000000000000"
             ]
         },
         mainnet: {
             url: process.env.URL_MAINNET ? process.env.URL_MAINNET : "https://place.holder",
             accounts: [
-                process.env.PRIVATE_KEY_MAINNET
-                    ? process.env.PRIVATE_KEY_MAINNET
+                process.env.PRIVATE_KEY_MAINNET2
+                    ? process.env.PRIVATE_KEY_MAINNET2
                     : "0x0000000000000000000000000000000000000000000000000000000000000000"
             ]
         }

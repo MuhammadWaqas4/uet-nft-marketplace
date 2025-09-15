@@ -14,10 +14,11 @@ async function main() {
 
     // Deployment variables.
     const ownerAddress = process.env.OWNER_ADDRESS;
+    const platformFeeRecipient = "0x30254A18d89ad9A91C97C06cA37BdCb85B013EB2";
 
     // Deploying token.
-    const marketplace3Address = await deploy("SimpleMarketplace", []);
-    
+    const marketplace3Address = await deploy("UETMarketplace", [platformFeeRecipient]);
+    // const marketplace3Address = "0x9F4257bE52D88d4F8E24C513834BE71B757858d1"
     // const marketplace3Address = "0x01a93b7153Ee160F3176af0B0F31121DF9f0FFA5";
     // Setting environment variables
     // fs.writeFileSync(".env", envfile.stringify(parsedENVFile));
@@ -28,7 +29,7 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 60000));
 
     // Verifying token.
-    await verify(marketplace3Address, []);
+    await verify(marketplace3Address, [platformFeeRecipient]);
 
     // Exiting.
     process.exit();
@@ -53,6 +54,7 @@ async function checkGasPrice(gasPriceUpperBound) {
 
 async function deploy(contractName, constructorArguments) {
     const contract = await hre.ethers.deployContract(contractName, constructorArguments);
+    console.log(`${contract} deployed to:`);
     await contract.waitForDeployment();
 
     const contractAddress = contract.target;

@@ -19,7 +19,22 @@ async function main() {
     // const totalSupply = process.env.TOTAL_SUPPLY;
 
     // Deploying token.
-    const deployedAddress = await deploy("USDT", []);
+    let string1 = "Bored Ape";
+    let string2 = "Ape";
+    // let deployedAddress = await deploy("ProFactory", []);
+
+    // const instance= await hre.ethers.getContractAt("ProFactory","0xd0BEC95C7CA4Df8De24Be3B793250Fa3939076e8") 
+    // console.log({instance});
+
+    // const deployed= await instance.createPro(string1,string2);
+    // await new Promise((resolve) => setTimeout(resolve, 20000));
+
+    // console.log(deployed);
+    // console.log(deployed.event.newPro);
+     await verify('0x56C23caE236FDeE535D7a8498C54C6c2b6049f5c', [string1,string2]);
+    return
+    
+    // let deployedAddress = "0xD7f1D29D75e2b363f559f3a663f9A8e7D7B73C77"
 
     // Setting environment variables
     // parsedENVFile.deployedAddress = deployedAddress;
@@ -27,15 +42,15 @@ async function main() {
     console.log("deployedAddress", deployedAddress);
 
     // Waiting for block explorer.
-    await new Promise((resolve) => setTimeout(resolve, 60000));
+    // await new Promise((resolve) => setTimeout(resolve, 20000));
 
     // Verifying token.
     // await verify(deployedAddress, [ownerAddress, rewardWalletAddress, totalSupply]);
     await verify(deployedAddress, []);
-
+        return
 
     // Exiting.
-    process.exit();
+    // process.exit();
 }
 
 async function checkGasPrice(gasPriceUpperBound) {

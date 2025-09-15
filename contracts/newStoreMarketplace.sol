@@ -24,7 +24,7 @@ import { IUET1155 } from "./interfaces/IUET1155.sol";
  * @author UET Team.
  * @notice UET Store Marketplace.
  */
-contract UETMarketplace is Ownable {
+contract UETStoreMarketplace is Ownable {
     using SafeERC20 for IERC20;
     using Address for address payable;
     using Strings for string;

@@ -20,6 +20,7 @@ import { IUET1155 } from "./interfaces/IUET1155.sol";
  * @title UET.
  * @author UET Team.
  * @notice UET NFT Marketplace.
+ * latest
  */
 contract UETMarketplace is Ownable {
     using SafeERC20 for IERC20;
@@ -204,19 +205,20 @@ contract UETMarketplace is Ownable {
         return values.tokenId;
     }
 
+    // offers / bids
     function offerAndTransfer(
         TradeDetails memory values,
         bytes memory signSeller,
         bytes memory signBuyer,
-        address contractAddress,
-        address royaltyWallet,
-        uint256 royalty,
-        uint256 deadline,
-        IERC20 tokenAddress,
-        BidType bid
+        address contractAddress, // collection address
+        address royaltyWallet, // metamask wallet address
+        uint256 royalty, // 10
+        uint256 deadline, // 10 years epoch time in offers case
+        IERC20 tokenAddress, // usdt address
+        BidType bid // 1, 0
     ) public returns (uint256) {
         if (bid == BidType.BID) {
-            if (deadline < block.timestamp) {
+            if (block.timestamp < deadline) {
                 revert DeadlinePassed();
             }
         }
@@ -342,7 +344,9 @@ contract UETMarketplace is Ownable {
 
         return values.tokenId;
     }
+    address public sellersignadress;
 
+    // instant sell / purchase / buy
     function buyAndTransfer(
         TradeDetails memory values,
         bytes memory signSeller,
@@ -367,21 +371,19 @@ contract UETMarketplace is Ownable {
         // offer time will be like when the seller put on sale
         bytes32 hashSeller = keccak256(
             abi.encodePacked(
-                this,
                 values._seller,
                 values._price,
                 offerTime,
                 values.tokenId
             )
         ).toEthSignedMessageHash();
-
+        
         if (values._seller != hashSeller.recover(signSeller)) {
             revert IncorrectSellerSignature();
         }
 
         bytes32 hashBuyer = keccak256(
             abi.encodePacked(
-                this,
                 _msgSender(),
                 values._price,
                 offerTime,
@@ -443,6 +445,27 @@ contract UETMarketplace is Ownable {
         );
 
         return values.tokenId;
+    }
+    function checksellersign(
+        address _seller,
+        uint256 _price,
+        uint256 offerTime,
+        uint256 tokenId,
+        bytes memory signSeller
+    ) public pure returns(bool){
+         bytes32 hashSeller = keccak256(
+            abi.encodePacked(
+               _seller,
+               _price,
+                offerTime,
+               tokenId
+            )
+        ).toEthSignedMessageHash();
+        
+        if (_seller != hashSeller.recover(signSeller)) {
+            return false;
+        }
+        return true;
     }
 
     function signVerification(
@@ -546,18 +569,22 @@ contract UETMarketplace is Ownable {
     ) internal {
         // require(royaltyFee <= 10, "Royalty fee too high: Must be 10% or less");
         if (royaltyFee > 10) {
-            payable(msg.sender).sendValue(amount);
+            // payable(msg.sender).sendValue(amount);
+            revert("Royalty fee too high: Must be 10% or less");
         }
 
-        uint256 royalty = (royaltyFee * amount) / 100;
-        uint256 _fee = platformFee * amount - royalty / 100;
+        royaltyFee = platformFee - royaltyFee;
 
-        tokenAddress.safeTransferFrom(_bidder, platformFeeRecipient, _fee);
+        uint256 royalty = (royaltyFee * amount) / 100;
+        // uint256 fee = (platformFee * amount) / 100;
+        // royalty = royalty - fee > 0  ? royalty - fee : 0;
+
+        // tokenAddress.safeTransferFrom(_bidder, platformFeeRecipient, fee);
         tokenAddress.safeTransferFrom(_bidder, royaltyWallet, royalty);
         tokenAddress.safeTransferFrom(
             _bidder,
             _seller,
-            amount - _fee - royalty
+            amount - royalty
         );
     }
 
@@ -572,19 +599,19 @@ contract UETMarketplace is Ownable {
             payable(msg.sender).sendValue(amount);
         }
         uint256 royalty = (royaltyFee * amount) / 100;
-        uint256 _fee = platformFee * amount - royalty / 100;
+        // uint256 _fee = platformFee * amount - royalty / 100;
 
         payable(royaltyWallet).transfer(royalty);
-        payable(platformFeeRecipient).transfer(_fee);
-        payable(_seller).transfer(amount - _fee - royalty);
+        // payable(platformFeeRecipient).transfer(_fee);
+        payable(_seller).transfer(amount - royalty);
     }
 
     function _processEthPaymentsWithoutRoyalty(
         address _seller,
         uint256 amount
     ) internal {
-        uint256 _fee = (platformFee * amount) / 100;
-        payable(platformFeeRecipient).transfer(_fee);
-        payable(_seller).transfer(amount - _fee);
+        uint256 fee = (platformFee * amount) / 100;
+        payable(platformFeeRecipient).transfer(fee);
+        payable(_seller).transfer(amount - fee);
     }
 }
